@@ -82,7 +82,7 @@ namespace Bacs.Web.Tests
 
             Assert.IsTrue(result is FileResponseSuccess);
             Assert.False(string.IsNullOrEmpty(result?.ResponseMessage));
-            Assert.AreEqual("successful upload", string.IsNullOrEmpty(result.ResponseMessage));
+            Assert.AreEqual("successful upload",result.ResponseMessage);
 
         }
     }

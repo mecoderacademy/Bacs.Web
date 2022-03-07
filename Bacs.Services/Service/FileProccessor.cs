@@ -8,6 +8,7 @@ using System.Linq;
 using System.IO;
 using Bacs.Models;
 using System.Reflection;
+using System.Collections.Generic;
 
 namespace Bacs.Services
 {
@@ -20,6 +21,7 @@ namespace Bacs.Services
         }
         public FileTransaction ReadFile(IFormFile formFile)
         {
+            bool isValid = false;
             FileTransaction fileReadSuccess = new();
 
             if (formFile == null)
@@ -43,14 +45,18 @@ namespace Bacs.Services
                         {
                             var data = line.Split(','); // could validate using regular expression
                             double.TryParse(data[3], out double value);
-                            if (value < 1.0 && value > 20000000.00) { fileReadSuccess.ResponseMessage = "Please supply a value between 1 and 20000000"; return fileReadSuccess; } // could add this to the transaction success model so each transaction can be validated
-                            fileReadSuccess.Transactions.Add(new Transaction()
+                            if (value < 1.0 && value > 20000000.00) { fileReadSuccess.ResponseMessage = "Please supply a value between 1 and 20000000"; isValid = false; } // could add this to the transaction success model so each transaction can be validated
+                            if (isValid)
                             {
-                                code = data[0],
-                                DirectDebitReference = data[1], // this proccess can be seperated into a new service for testing in isolation or test files can be provided for other edge cases
-                                Name = data[2],
-                                Value = value,
-                            });
+                                fileReadSuccess.Transactions.Add(new Transaction()
+                                {
+                                    code = data[0],
+                                    DirectDebitReference = data[1], // this proccess can be seperated into a new service for testing in isolation or test files can be provided for other edge cases
+                                    Name = data[2],
+                                    Value = value,
+                                });
+                            }
+                          
                         }
                     }
                 }
@@ -60,12 +66,16 @@ namespace Bacs.Services
                 fileReadSuccess.ResponseMessage = ex.Message;
                 return fileReadSuccess;
             }
-
+            
             fileReadSuccess.TotalAmount = fileReadSuccess.Transactions.Sum(x => x.Value);
+           
             return fileReadSuccess;
         }
 
+        private List<Transaction> ReadFile(IFormFile formFile)
+        {
 
+        }
         public IFileResponse ProccessFile(IFormFile formFile)
         {
             var fileReadResult = ReadFile(formFile);
